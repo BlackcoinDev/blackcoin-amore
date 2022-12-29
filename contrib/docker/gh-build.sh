@@ -5,12 +5,12 @@ moreBuilder=${BASE_DIR}/moreBuilder
 rm -fr ${moreBuilder}/*
 
 export SYSTYPE=x86_64
-export DockerHub=blackcoinnl  
+export DockerHub=blackcoindev  
 export HUBLAB=github
-export GITNAME=CoinBlack
+export GITNAME=blackcoindev
 export BRANCH=${GIT_CURRENT_BRANCH}
-sed -i "s|BRANCH=master|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubase
-sed -i "s|BRANCH=master|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubuntu
+sed -i "s|BRANCH=main|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubase
+sed -i "s|BRANCH=main|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubuntu
 export TZ=Etc/UTC
 
 echo "${GITHUB_ENV} = GITHUB_ENV"

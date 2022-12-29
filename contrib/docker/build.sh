@@ -15,13 +15,13 @@ fi
 
 # DockerHub Account
 
-defaultDockerHub=blackcoinnl
+defaultDockerHub=blackcoindev
 read -p "What is your DockerHub Account Name? (default: ${defaultDockerHub}): " DockerHub
 DockerHub=${DockerHub:-${defaultDockerHub}}
 if [ ${DockerHub} != ${defaultDockerHub} ]; then
-	sed -i "s/defaultDockerHub=blackcoinnl/defaultDockerHub=${DockerHub}/" $0
-	sed -i "s|blackcoinnl|${DockerHub}|" ${BASE_DIR}/Dockerfile.ubuntu
-	sed -i "s|blackcoinnl|${DockerHub}|" $0
+	sed -i "s/defaultDockerHub=blackcoindev/defaultDockerHub=${DockerHub}/" $0
+	sed -i "s|blackcoindev|${DockerHub}|" ${BASE_DIR}/Dockerfile.ubuntu
+	sed -i "s|blackcoindev|${DockerHub}|" $0
 
 fi
 
@@ -39,28 +39,28 @@ if [ ${HubLab} != ${defaultHubLab} ]; then
 
 fi
 
-defaultGitName=CoinBlack
+defaultGitName=blackcoindev
 read -p "Git account to use? (default: ${defaultGitName}): " Git
 Git=${Git:-${defaultGitName}}
 if [ ${Git} != ${defaultGitName} ]; then
-	sed -i "s|defaultGitName=CoinBlack|defaultGitName=${Git}|" $0
-	sed -i "s|GITNAME=CoinBlack|GITNAME=${Git}|" ${BASE_DIR}/Dockerfile.ubase
-	sed -i "s|GITNAME=CoinBlack|GITNAME=${Git}|" ${BASE_DIR}/Dockerfile.minbase
-	sed -i "s|GITNAME=CoinBlack|GITNAME=${Git}|" $0
+	sed -i "s|defaultGitName=blackcoindev|defaultGitName=${Git}|" $0
+	sed -i "s|GITNAME=blackcoindev|GITNAME=${Git}|" ${BASE_DIR}/Dockerfile.ubase
+	sed -i "s|GITNAME=blackcoindev|GITNAME=${Git}|" ${BASE_DIR}/Dockerfile.minbase
+	sed -i "s|GITNAME=blackcoindev|GITNAME=${Git}|" $0
 fi
 
 # Git Branch
 
-defaultBranch=master
+defaultBranch=main
 read -p "What branch/version? (default: ${defaultBranch}): " BRANCH
 BRANCH=${BRANCH:-${defaultBranch}}
 if [ ${BRANCH} != ${defaultBranch} ]; then
-	sed -i "s|defaultBranch=master|defaultBranch=${BRANCH}|" $0
-	sed -i "s|BRANCH=master|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubase
-	sed -i "s|BRANCH=master|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.minbase
-	sed -i "s|master|${BRANCH}|" ${BASE_DIR}/Dockerfile.ubuntu
-	sed -i "s|BRANCH=master|BRANCH=${BRANCH}|" $0
-	sed -i "s|master|${BRANCH}|" $0
+	sed -i "s|defaultBranch=main|defaultBranch=${BRANCH}|" $0
+	sed -i "s|BRANCH=main|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubase
+	sed -i "s|BRANCH=main|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.minbase
+	sed -i "s|main|${BRANCH}|" ${BASE_DIR}/Dockerfile.ubuntu
+	sed -i "s|BRANCH=main|BRANCH=${BRANCH}|" $0
+	sed -i "s|main|${BRANCH}|" $0
 fi
 
 # x11 Desktop QT?
