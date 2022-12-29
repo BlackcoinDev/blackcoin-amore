@@ -64,11 +64,11 @@ if [ ${BRANCH} != ${defaultBranch} ]; then
 fi
 
 # x11 Desktop QT?
-defaultX11=y
+defaultX11=n
 read -p "Are you going to need X11docker for QT (visual) client? (default: ${defaultX11}): " X11
 X11=${X11:-${defaultX11}}
 if [ ${X11} != ${defaultX11} ]; then
-	sed -i "s/defaultX11=y/defaultX11=${X11}/" $0
+	sed -i "s/defaultX11=n/defaultX11=${X11}/" $0
 fi
 
 # timezone
