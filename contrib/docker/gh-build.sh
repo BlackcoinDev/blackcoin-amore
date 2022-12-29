@@ -8,7 +8,7 @@ export SYSTYPE=x86_64
 export DockerHub=blackcoindev  
 export HUBLAB=github
 export GITNAME=blackcoindev
-export BRANCH=${GIT_CURRENT_BRANCH}
+export BRANCH=main
 sed -i "s|BRANCH=main|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubase
 sed -i "s|BRANCH=main|BRANCH=${BRANCH}|" ${BASE_DIR}/Dockerfile.ubuntu
 export TZ=Etc/UTC
