@@ -1,4 +1,4 @@
-FROM blackcoindev/blackcoin-more-base-x86_64:main as build
+FROM blackcoindev/blackcoin-amore-base-x86_64:main as build
 RUN echo "Building Ubuntu Package"
 #
 # Collect dependencies
@@ -31,9 +31,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 #
 # Copy the binaries from the build to our new container
 #
-COPY --from=build /blackcoin-more/src/blackmored /usr/local/bin
-COPY --from=build /blackcoin-more/src/blackmore-cli /usr/local/bin
-COPY --from=build /blackcoin-more/src/qt/blackmore-qt /usr/local/bin
+COPY --from=build /blackcoin-amore/src/blackmored /usr/local/bin
+COPY --from=build /blackcoin-amore/src/blackmore-cli /usr/local/bin
+COPY --from=build /blackcoin-amore/src/qt/blackmore-qt /usr/local/bin
 COPY --from=build /usr/bin/bc /usr/bin
 COPY --from=build /usr/bin/jq /usr/bin
 #

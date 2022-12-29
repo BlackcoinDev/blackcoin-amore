@@ -21,9 +21,9 @@ echo ${SYSTYPE}
 echo ${TZ}
 
 # tag names
-base="${DockerHub}/blackcoin-more-base-${SYSTYPE}:${BRANCH}"
-minimal="${DockerHub}/blackcoin-more-minimal-${SYSTYPE}:${BRANCH}"
-ubuntu="${DockerHub}/blackcoin-more-ubuntu-${SYSTYPE}:${BRANCH}"
+base="${DockerHub}/blackcoin-amore-base-${SYSTYPE}:${BRANCH}"
+minimal="${DockerHub}/blackcoin-amore-minimal-${SYSTYPE}:${BRANCH}"
+ubuntu="${DockerHub}/blackcoin-amore-ubuntu-${SYSTYPE}:${BRANCH}"
 
 # build
 # ubase (base using ubuntu)

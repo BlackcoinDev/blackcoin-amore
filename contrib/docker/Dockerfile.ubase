@@ -40,7 +40,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 #
 # Build Blackcoin More
 #
-RUN git clone -b $BRANCH https://$HUBLAB.com/$GITNAME/blackcoin-more.git && \
+RUN git clone -b $BRANCH https://$HUBLAB.com/$GITNAME/blackcoin-amore.git && \
       (wget https://distfiles.gentoo.org/distfiles/db-6.2.38.tar.gz && \
       tar -xvf db-6.2.38.tar.gz && \
       cd db-6.2.38/build_unix && \
@@ -49,7 +49,7 @@ RUN git clone -b $BRANCH https://$HUBLAB.com/$GITNAME/blackcoin-more.git && \
       ../dist/configure --disable-shared  -disable-replication --enable-cxx --with-pic  --prefix=$BDB_PREFIX --with-gui=no --enable-glibc-back-compat --enable-reduce-exports --disable-tests --disable-bench --disable-gui-tests --disable-man && \
       make install && \
       cd ../.. && \
-      cd blackcoin-more/  && ./autogen.sh && \
+      cd blackcoin-amore/  && ./autogen.sh && \
       ./configure CPPFLAGS="-I${BDB_PREFIX}/include/ -O2" LDFLAGS="-L${BDB_PREFIX}/lib/" --disable-tests --disable-bench --enable-reduce-exports && \
       make -j4 && \
       cd src/ && \
@@ -57,10 +57,10 @@ RUN git clone -b $BRANCH https://$HUBLAB.com/$GITNAME/blackcoin-more.git && \
 #
 # Prepare for minimal package
 #
-  cp /blackcoin-more/src/blackmored /usr/local/bin/ && \
-  cp /blackcoin-more/src/blackmore-cli /usr/local/bin/ && \
-  cp /blackcoin-more/src/qt/blackmore-qt /usr/local/bin/ && \
-  cp /blackcoin-more/contrib/blk /usr/local/bin/ && \
+  cp /blackcoin-amore/src/blackmored /usr/local/bin/ && \
+  cp /blackcoin-amore/src/blackmore-cli /usr/local/bin/ && \
+  cp /blackcoin-amore/src/qt/blackmore-qt /usr/local/bin/ && \
+  cp /blackcoin-amore/contrib/blk /usr/local/bin/ && \
   mkdir /parts  && \
   cd  /parts  && \
   cp --parents /usr/local/bin/blk ./ && \
