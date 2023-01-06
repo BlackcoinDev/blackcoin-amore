@@ -394,8 +394,9 @@ private:
     /** Send `feefilter` message. */
     void MaybeSendFeefilter(CNode& node, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     
-    /** Process net block headers. */
+    /** Process net block. */
     bool ProcessNetBlockHeaders(CNode* pfrom, const std::vector<CBlockHeader>& block, BlockValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex=nullptr);
+    bool ProcessNetBlock(const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock, CNode* pfrom);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -1206,6 +1207,46 @@ bool PeerManagerImpl::ProcessNetBlockHeaders(CNode* pfrom, const std::vector<CBl
         return headers.updateState(state, ret);
     }
     return ret;
+}
+
+bool PeerManagerImpl::ProcessNetBlock(const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock, CNode* pfrom)
+{
+    // Check that the coinstake transaction exists in the received block
+    if (pblock->IsProofOfStake() && !(pblock->vtx.size() > 1 && pblock->vtx[1]->IsCoinStake())) {
+        if (pfrom)
+            Misbehaving(pfrom->GetId(), 100, "coinstake transaction does not exist");
+        return error("%s: coinstake transaction does not exist", __func__);
+    }
+
+    // Check if block signature is canonical
+    if (!IsCanonicalBlockSignature(pblock, false)) {
+        if (pfrom && pfrom->nVersion >= CANONICAL_BLOCK_SIG_VERSION) {
+            Misbehaving(pfrom->GetId(), 100, "bad block signature encoding");
+            return error("%s: bad block signature encoding", __func__);
+        }
+    }
+
+    if (!IsCanonicalBlockSignature(pblock, true)) {
+        if (pfrom && pfrom->nVersion >= CANONICAL_BLOCK_SIG_LOW_S_VERSION) {
+            Misbehaving(pfrom->GetId(), 100, "bad block signature encoding (low-s)");
+            return error("%s: bad block signature encoding (low-s)", __func__);
+        }
+    }
+
+    // Process the header before processing the block
+    const CBlockIndex *pindex = nullptr;
+    BlockValidationState state;
+    if (!ProcessNetBlockHeaders(pfrom, {*pblock}, state, m_chainparams, &pindex)) {
+        if (state.IsInvalid()) {
+            MaybePunishNodeForBlock(pfrom->GetId(), state, false, strprintf("Peer %d sent us invalid header\n", pfrom->GetId()));
+            return error("%s: invalid header received", __func__);
+        }
+    }
+
+    if (!m_chainman.ProcessNewBlock(m_chainparams, pblock, fForceProcessing, fNewBlock))
+        return error("%s: ProcessNewBlock FAILED", __func__);
+
+    return true;
 }
 
 void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
@@ -2573,7 +2614,7 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv)
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing)
 {
     bool new_block{false};
-    m_chainman.ProcessNewBlock(m_chainparams, block, force_processing, &new_block);
+    ProcessNetBlock(block, force_processing, &new_block, &node);
     if (new_block) {
         node.nLastBlockTime = GetTime();
     } else {
@@ -2624,7 +2665,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (nVersion < (Params().GetConsensus().IsProtocolV3_1(GetAdjustedTime()) ? PROTOCOL_VERSION : MIN_PEER_PROTO_VERSION)) {
+        if (nVersion < (Params().GetConsensus().IsProtocolV3_1(GetAdjustedTime()) ? OLD_VERSION : MIN_PEER_PROTO_VERSION)) {
             // disconnect from peers older than this proto version
             LogPrint(BCLog::NET, "peer=%d using obsolete version %i; disconnecting\n", pfrom.GetId(), nVersion);
             pfrom.fDisconnect = true;
