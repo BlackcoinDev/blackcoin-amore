@@ -1328,11 +1328,11 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 entry.pushKV("involvesWatchonly", true);
             }
             MaybePushAddress(entry, r.destination);
-            if (wtx.IsCoinBase())
+            if (wtx.IsCoinBase() || wtx.IsCoinStake())
             {
                 if (wtx.GetDepthInMainChain() < 1)
                     entry.pushKV("category", "orphan");
-                else if (wtx.IsImmatureCoinBase())
+                else if (wtx.IsImmature())
                     entry.pushKV("category", "immature");
                 else
                     entry.pushKV("category", "generate");
@@ -2373,6 +2373,7 @@ static RPCHelpMan getbalances()
         balances_mine.pushKV("trusted", ValueFromAmount(bal.m_mine_trusted));
         balances_mine.pushKV("untrusted_pending", ValueFromAmount(bal.m_mine_untrusted_pending));
         balances_mine.pushKV("immature", ValueFromAmount(bal.m_mine_immature));
+        balances_mine.pushKV("stake", ValueFromAmount(bal.m_mine_stake));
         if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
             // If the AVOID_REUSE flag is set, bal has been set to just the un-reused address balance. Get
             // the total balance, and then subtract bal to get the reused address balance.
@@ -2387,6 +2388,7 @@ static RPCHelpMan getbalances()
         balances_watchonly.pushKV("trusted", ValueFromAmount(bal.m_watchonly_trusted));
         balances_watchonly.pushKV("untrusted_pending", ValueFromAmount(bal.m_watchonly_untrusted_pending));
         balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
+        balances_watchonly.pushKV("stake", ValueFromAmount(bal.m_watchonly_stake));
         balances.pushKV("watchonly", balances_watchonly);
     }
     return balances;
@@ -3560,18 +3562,28 @@ static RPCHelpMan burn()
     };
 }
 
-/*
-UniValue burnwallet(const JSONRPCRequest& request)
+// Blackcoin ToDo: check if it works
+static RPCHelpMan burnwallet()
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
-            "burnwallet <hex string> [force]"
-            + HelpRequiringPassphrase(pwallet));
-
+    return RPCHelpMan{"burnwallet",
+            "\nBurn all coins in a wallet\n"
+            "This will make all coins unspendable, making OP_RETURN transaction.\n" +
+        HELP_REQUIRING_PASSPHRASE,
+            {
+                {"hex_string", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded string."},
+                {"force", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Force burn."},
+            },
+            RPCResult{
+                RPCResult::Type::STR_HEX, "txid", "The transaction id."
+            },
+            RPCExamples{
+                HelpExampleCli("burnwallet", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" true")
+            },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
     CScript scriptPubKey;
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     if (request.params.size() > 0) {
         std::vector<unsigned char> data;
@@ -3589,39 +3601,45 @@ UniValue burnwallet(const JSONRPCRequest& request)
     if (request.params.size() > 1)
         fForce = request.params[1].get_bool();
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
+
+    CCoinControl coin_control;
+    mapValue_t mapValue;
+
+    const auto bal = pwallet->GetBalance();
+    CAmount nAmount = bal.m_mine_trusted;
 
     if (!fForce) {
         if (scriptPubKey.size() <= 32)
             throw JSONRPCError(RPC_WALLET_ERROR, "Warning: small data");
-        if (pwallet->GetUnconfirmedBalance() != 0)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Warning: unconfirmed balance != 0");
-        if (pwallet->GetImmatureBalance() != 0)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Warning: immature balance != 0");
-        if (pwallet->GetStake() != 0)
+        if (bal.m_mine_stake != 0)
             throw JSONRPCError(RPC_WALLET_ERROR, "Warning: stake balance != 0");
+        if (bal.m_mine_untrusted_pending != 0)
+            throw JSONRPCError(RPC_WALLET_ERROR, "Warning: unconfirmed balance != 0");
+        if (bal.m_mine_immature != 0)
+            throw JSONRPCError(RPC_WALLET_ERROR, "Warning: immature balance != 0");
     }
 
-    CAmount nAmount = pwallet->GetBalance();
-    std::vector<CRecipient> vecSend;
-    CRecipient recipient = {scriptPubKey, nAmount, false};
-    vecSend.push_back(recipient);
-    CWalletTx wtx;
-    CReserveKey keyChange(pwallet);
+    // Send
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     std::string strError;
-    pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strError, coin_control);
-    vecSend[0].nAmount -= nFeeRequired;
-    if (!pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strError, coin_control))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction creation failed");
+    std::vector<CRecipient> recipients;
+    CRecipient recipient = {scriptPubKey, nAmount, false};
+    recipients.push_back(recipient);
+    bilingual_str error;
+    CTransactionRef tx;
+    const bool fCreated = pwallet->CreateTransaction(recipients, tx, nFeeRequired, nChangePosRet, error, coin_control, true);
 
-    if (!pwallet->CommitTransaction(wtx, keyChange))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+    if (!fCreated) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    }
+    pwallet->CommitTransaction(tx, std::move(mapValue), {});
 
-    return wtx.GetHash().GetHex();
+    return tx->GetHash().GetHex();
+},
+    };
 }
-*/
 
 // ///////////////////////////////////////////////////////////////////// ** em52
 //  new rpc added by Remy5
@@ -4866,7 +4884,7 @@ static const CRPCCommand commands[] =
 
     { "wallet",             &reservebalance,                 },
     { "wallet",             &burn,                           },
-    //{ "wallet",             &burnwallet,                     },
+    { "wallet",             &burnwallet,                     },
 };
 // clang-format on
     return MakeSpan(commands);
