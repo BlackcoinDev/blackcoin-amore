@@ -120,8 +120,8 @@ public:
         consensus.nStakeTimestampMask = 0xf; // 15
         consensus.nCoinbaseMaturity = 500;
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000038844f1764349c166d5");
-        consensus.defaultAssumeValid = uint256S("0x36442d872ca6a66c65caef4d9468b8add290accc8cf7ec386eee50e62721ed3d"); //2400000
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000039c894d4e483a4943d1");
+        consensus.defaultAssumeValid = uint256S("0xae0c2a9bd13746e2887ca57bf1046b3c787a5ed1068fd1633a3575f08ee291fc"); // 4232630
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -251,8 +251,8 @@ public:
         pchMessageStart[3] = 0xef;
         nDefaultPort = 25714;
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000003085211742a1e74583");
-        consensus.defaultAssumeValid = uint256S("0x00");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000395ae7599030cbde43");
+        consensus.defaultAssumeValid = uint256S("0x9583676625157dc0405bbd48b9220157eeabb7d9460fa234d31b49ea7014de2f"); // 90235
 
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 2;
@@ -283,7 +283,8 @@ public:
 
         checkpointData = {
             {
-                { 90235, uint256S("0x567898e79184dc2f7dc3a661f794f28566e4b856d70180914f7371b1b3cc82d8")},
+                {  90235, uint256S("0x567898e79184dc2f7dc3a661f794f28566e4b856d70180914f7371b1b3cc82d8")},
+                {1415393, uint256S("0x9583676625157dc0405bbd48b9220157eeabb7d9460fa234d31b49ea7014de2f")},
             }
         };
 
@@ -292,10 +293,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 40500 ea12999341c1f02442ee9300a1da589a8d40f8f9a44bf4fbbb58b43c6f806c5d
-            /* nTime    */ 1652777744,
-            /* nTxCount */ 2201801,
-            /* dTxRate  */ 0.019
+            // Data from RPC: getchaintxstats 40500 9583676625157dc0405bbd48b9220157eeabb7d9460fa234d31b49ea7014de2f
+            /* nTime    */ 1674153488,
+            /* nTxCount */ 2833624,
+            /* dTxRate  */ 0.029
         };
         // A vector of p2sh addresses
         vDevFundAddress = { "n14L5xqAs7QRzNiTLPNaPeqaF9CRoxzVnU" };
