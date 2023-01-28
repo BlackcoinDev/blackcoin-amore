@@ -46,8 +46,8 @@ RUN git clone -b $BRANCH https://$HUBLAB.com/$GITNAME/blackcoin-amore.git && \
       cd db-6.2.38/build_unix && \
       mkdir -p build && \
       BDB_PREFIX=$(pwd)/build && \
-      ../dist/configure --disable-shared  -disable-replication --enable-cxx --with-pic  --prefix=$BDB_PREFIX --with-gui=no --enable-glibc-back-compat --enable-reduce-exports --disable-tests --disable-bench --disable-gui-tests --disable-man && \
-      make install -j$(nproc) && \
+      ../dist/configure --disable-shared  -disable-replication --enable-cxx --with-pic  --prefix=$BDB_PREFIX && \
+      make install && \
       cd ../.. && \
       cd blackcoin-amore/  && ./autogen.sh && \
       ./configure CPPFLAGS="-I${BDB_PREFIX}/include/ -O2" LDFLAGS="-L${BDB_PREFIX}/lib/" --disable-tests --disable-bench --enable-sse2 && \
