@@ -1713,13 +1713,8 @@ void CWallet::ReacceptWalletTransactions()
 
         int nDepth = wtx.GetDepthInMainChain();
 
-        if (nDepth == 0 && !wtx.isAbandoned()) {
-            if (wtx.IsCoinBase() || wtx.IsCoinStake()) {
-                LogPrintf("Abandoning wtx %s\n", wtx.GetHash().ToString());
-                AbandonTransaction(wtxid);
-            }
-            else
-                mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
+        if (!(wtx.IsCoinBase() || wtx.IsCoinStake()) && (nDepth == 0 && !wtx.isAbandoned())) {
+            mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
         }
     }
 
@@ -1728,6 +1723,21 @@ void CWallet::ReacceptWalletTransactions()
         CWalletTx& wtx = *(item.second);
         std::string unused_err_string;
         wtx.SubmitMemoryPoolAndRelay(unused_err_string, false);
+    }
+}
+
+void CWallet::AbandonOrphanedCoinstakes()
+{
+    for (std::pair<const uint256, CWalletTx>& item : mapWallet) {
+        const uint256& wtxid = item.first;
+        CWalletTx& wtx = item.second;
+        assert(wtx.GetHash() == wtxid);
+        if (wtx.GetDepthInMainChain() == 0 && !wtx.isAbandoned() && wtx.IsCoinStake()) {
+            LogPrint(BCLog::COINSTAKE, "Abandoning coinstake wtx %s\n", wtx.GetHash().ToString());
+            if (!AbandonTransaction(wtxid)) {
+                LogPrint(BCLog::COINSTAKE, "Failed to abandon coinstake tx %s\n", wtx.GetHash().ToString());
+            }
+        }
     }
 }
 
